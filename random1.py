@@ -4,15 +4,10 @@ import time
 
 stop = False
 
-#jobs
-tick_job = 0
-move_job = 0
-create_wall_job = 0
-wall_move_job = 0
-crash_test_job = 0
-gravity_job = 0
-score_counting_job = 0
-ingame_score_job = 0
+def nothing():
+    pass
+
+
 
 
 score = 0
@@ -34,6 +29,15 @@ wall = []
 best_score = 0
 root = tk.Tk()
 
+#jobs
+tick_job = root.after(0, nothing)
+move_job = root.after(0, nothing)
+create_wall_job = root.after(0, nothing)
+wall_move_job = root.after(0, nothing)
+crash_test_job = root.after(0, nothing)
+gravity_job = root.after(0, nothing)
+score_counting_job = root.after(0, nothing)
+ingame_score_job = root.after(0, nothing)
 
 #helpers
 def get_pos():
