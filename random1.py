@@ -172,23 +172,19 @@ def gravity_change():
         return
     if (RANDOM_WALLS):
         gravity_change_time = random.randint(5000, 15000)
-    root.after(gravity_change_time, gravity_change_p2)
 
-def gravity_change_p2():
-    global gravity_job, gravity
     canvas.configure(bg="cyan")
-    
-    root.after(1000, gravity_change_p3)
+    root.after(1000, gravity_change_2)
 
-def gravity_change_p3():
-    global gravity_job, gravity
+def gravity_change_2():
+    global gravity_job, gravity, gravity_change_time
     gravity *= -1
     if (gravity == 1):
         canvas.configure(bg="green")
     else:
         canvas.configure(bg="blue")
 
-    gravity_job = root.after(20, gravity_change)
+    gravity_job = root.after(gravity_change_time, gravity_change)
 
 def score_counting():
     global score_counting_job, score
@@ -242,6 +238,7 @@ def delete_all():
             canvas.delete(j)
     delete_obj()
     delete_score()
+    cancel_jobs()
 
 
 def start():
@@ -260,10 +257,9 @@ def start():
     move()
     tick()
     crash_test()
-    gravity_change()
     score_counting()
     print_ingame_score()
-
+    root.after(10000, gravity_change)
 
 
 def restart():
