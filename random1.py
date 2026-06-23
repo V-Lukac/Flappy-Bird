@@ -11,11 +11,15 @@ create_wall_job = 0
 wall_move_job = 0
 crash_test_job = 0
 gravity_job = 0
+score_counting_job = 0
+ingame_score_job = 0
 
+
+score = 0
 speed = 0
 speed_set = 5
 acceleration = -10
-gravity = -1 #changed to 1 line 196
+gravity = 1
 gravity_change_time = 10000
 
 RANDOM_WALLS = True
@@ -44,6 +48,7 @@ canvas.pack()
 obj = 0
 hitbox = 0
 score_text = 0
+ingame_score_text = 0
 
 def creat_obj():
     global obj, hitbox
@@ -59,13 +64,8 @@ def delete_obj():
     canvas.delete(hitbox)
 
 def print_score():
-    global score_text, best_score
-    score = 0
-    for i in wall:
-        _, _, wall_x2, _ = canvas.coords(i[0])
-        obj_x1, _, _, _ = get_pos()
-        if (wall_x2 < obj_x1):
-            score += 1
+    global score_text, best_score, score
+
     if (score > best_score):
         best_score = score
 
@@ -113,8 +113,12 @@ def creat_wall():
     if (RANDOM_WALLS):
         wall_time_distance = random.randint(1200, 2000)
         hole_size = random.randint(80, 300)
-        hole_pos_new = random.randint(0, 600 - hole_size)
+        hole_pos_new = random.randint(50, 600 - hole_size - 50)
         hole_pos = (hole_pos_last + hole_pos_new) // 2
+        if (hole_pos < 50):
+            hole_pos = 50
+        elif (hole_pos > 600 - hole_size - 50):
+            hole_pos = 600 - hole_size - 50
     
     
     
@@ -132,6 +136,8 @@ def creat_wall():
     wall[wall_count].append(
         canvas.create_rectangle(800 - 10, hole_pos + hole_size + 50, 800 + wall_thickness + 10, hole_pos + hole_size, fill="red")
     )
+    wall[wall_count].append(0) #0 = not counted, 1 = counted
+
     create_wall_job = root.after(wall_time_distance, creat_wall)
 
 def wall_move():
@@ -153,7 +159,7 @@ def crash_test():
     pos = get_pos()
     hits = canvas.find_overlapping(*pos)
     num = len(hits)
-    print(num)
+    #print(num)
     if (num > 2 or (pos[1] < 0 or pos[3] > 600)):
         stop = True
         print_score()
@@ -166,17 +172,66 @@ def gravity_change():
         return
     if (RANDOM_WALLS):
         gravity_change_time = random.randint(5000, 15000)
+    root.after(gravity_change_time, gravity_change_p2)
 
+def gravity_change_p2():
+    global gravity_job, gravity
+    canvas.configure(bg="cyan")
+    
+    root.after(1000, gravity_change_p3)
+
+def gravity_change_p3():
+    global gravity_job, gravity
     gravity *= -1
     if (gravity == 1):
         canvas.configure(bg="green")
     else:
         canvas.configure(bg="blue")
 
-    gravity_job = root.after(gravity_change_time, gravity_change)
+    gravity_job = root.after(20, gravity_change)
+
+def score_counting():
+    global score_counting_job, score
+    if (stop):
+        return
+    for i in wall:
+        _, _, wall_x2, _ = canvas.coords(i[2])
+        obj_x1, _, _, _ = get_pos()
+        if (wall_x2 < obj_x1):
+            if (i[4] == 0): # Check if wall has not been counted yet
+                score += 1
+                i[4] = 1 # Mark as counted
+    #print(score)
+    for i in wall:
+        _, _, wall_x2, _ = canvas.coords(i[2])
+        if (wall_x2 < 0 and i[4] == 1): # Check if wall has moved off screen and has been counted
+            for j in i:
+                canvas.delete(j)
+            wall.remove(i)
+    score_counting_job = root.after(20, score_counting)
+
+def delete_ingame_score():
+    global ingame_score_text
+    canvas.delete(ingame_score_text)
+
+def print_ingame_score():
+    global ingame_score_text, score, ingame_score_job
+    delete_ingame_score()
+    ingame_score_text = canvas.create_text(80, 20,
+                    text=f"Score: {score}",
+                    fill="black", font=("Arial", 30))
+    ingame_score_job = root.after(20, print_ingame_score)
 
 def cancel_jobs():
-    for i in [tick_job, move_job, create_wall_job, wall_move_job, crash_test_job, gravity_job]:
+    for i in [tick_job,
+              move_job,
+              create_wall_job,
+              wall_move_job,
+              crash_test_job,
+              gravity_job,
+              score_counting_job,
+              ingame_score_job
+              ]:
         root.after_cancel(i)
 
 
@@ -190,10 +245,11 @@ def delete_all():
 
 
 def start():
-    global wall, stop, speed, gravity
+    global wall, stop, speed, gravity, score
     stop = False
     speed = 0
-    gravity = -1 #changed to 1 line 196
+    gravity = 1
+    score = 0
     canvas.configure(bg="green")
     wall = []
     creat_obj()
@@ -205,6 +261,8 @@ def start():
     tick()
     crash_test()
     gravity_change()
+    score_counting()
+    print_ingame_score()
 
 
 
