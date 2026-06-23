@@ -83,11 +83,11 @@ def delete_score():
 
 def key_pressed(event):
     global speed, stop
-    if (event.keysym == "space"):
-        speed = speed_set
+    if (event.keysym == "space" and not stop):
+        speed = speed_set * gravity
     elif(event.keysym == "c"):
         stop = True
-    elif(event.keysym == "r"):
+    elif(event.keysym == "space" and stop):
         restart()
 
 
@@ -97,8 +97,8 @@ def move():
     if (stop):
         return
     global speed
-    canvas.move(obj, 0, -speed * gravity)
-    canvas.move(hitbox, 0, -speed * gravity)
+    canvas.move(obj, 0, -speed)
+    canvas.move(hitbox, 0, -speed)
     move_job = root.after(20, move)
 
 def tick():
@@ -106,7 +106,7 @@ def tick():
     if (stop):
         return
     global speed
-    speed = speed + acceleration * 0.001
+    speed = speed + acceleration * 0.001 * gravity
     tick_job = root.after(1, tick)
 
 def creat_wall():
