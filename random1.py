@@ -10,10 +10,13 @@ move_job = 0
 create_wall_job = 0
 wall_move_job = 0
 crash_test_job = 0
+gravity_job = 0
 
 speed = 0
 speed_set = 5
 acceleration = -10
+gravity = -1 #changed to 1 line 196
+gravity_change_time = 10000
 
 RANDOM_WALLS = True
 SHOW_HITBOX = False
@@ -86,12 +89,12 @@ def key_pressed(event):
 
 #job functions
 def move():
-    global obj, hitbox, move_job
+    global obj, hitbox, move_job, gravity
     if (stop):
         return
     global speed
-    canvas.move(obj, 0, -speed)
-    canvas.move(hitbox, 0, -speed)
+    canvas.move(obj, 0, -speed * gravity)
+    canvas.move(hitbox, 0, -speed * gravity)
     move_job = root.after(20, move)
 
 def tick():
@@ -104,20 +107,30 @@ def tick():
 
 def creat_wall():
     global wall_time_distance, hole_pos, hole_size, create_wall_job
+    hole_pos_last = hole_pos
     if (stop):
         return
     if (RANDOM_WALLS):
         wall_time_distance = random.randint(1200, 2000)
-        hole_size = random.randint(50, 400)
-        hole_pos = random.randint(0, 600 - hole_size)
+        hole_size = random.randint(80, 300)
+        hole_pos_new = random.randint(0, 600 - hole_size)
+        hole_pos = (hole_pos_last + hole_pos_new) // 2
+    
+    
+    
     wall.append([])
     wall_count = len(wall) - 1
     wall[wall_count].append(
         canvas.create_rectangle(800, 0, 800 + wall_thickness, hole_pos, fill="red")
-
     )
     wall[wall_count].append(
         canvas.create_rectangle(800, hole_size + hole_pos, 800 + wall_thickness, 600, fill="red")
+    )
+    wall[wall_count].append(
+        canvas.create_rectangle(800 - 10, hole_pos - 50, 800 + wall_thickness + 10, hole_pos, fill="red")
+    )
+    wall[wall_count].append(
+        canvas.create_rectangle(800 - 10, hole_pos + hole_size + 50, 800 + wall_thickness + 10, hole_pos + hole_size, fill="red")
     )
     create_wall_job = root.after(wall_time_distance, creat_wall)
 
@@ -147,9 +160,23 @@ def crash_test():
         cancel_jobs()
     crash_test_job = root.after(20, crash_test)
 
+def gravity_change():
+    global gravity_job, gravity, gravity_change_time
+    if (stop):
+        return
+    if (RANDOM_WALLS):
+        gravity_change_time = random.randint(5000, 15000)
+
+    gravity *= -1
+    if (gravity == 1):
+        canvas.configure(bg="green")
+    else:
+        canvas.configure(bg="blue")
+
+    gravity_job = root.after(gravity_change_time, gravity_change)
 
 def cancel_jobs():
-    for i in [tick_job, move_job, create_wall_job, wall_move_job, crash_test_job]:
+    for i in [tick_job, move_job, create_wall_job, wall_move_job, crash_test_job, gravity_job]:
         root.after_cancel(i)
 
 
@@ -163,8 +190,11 @@ def delete_all():
 
 
 def start():
-    global wall, stop
+    global wall, stop, speed, gravity
     stop = False
+    speed = 0
+    gravity = -1 #changed to 1 line 196
+    canvas.configure(bg="green")
     wall = []
     creat_obj()
 
@@ -174,6 +204,7 @@ def start():
     move()
     tick()
     crash_test()
+    gravity_change()
 
 
 
