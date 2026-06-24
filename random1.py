@@ -178,7 +178,7 @@ def gravity_change():
         gravity_change_time = random.randint(5000, 15000)
 
     canvas.configure(bg="cyan")
-    root.after(1000, gravity_change_2)
+    gravity_job = root.after(1000, gravity_change_2)
 
 def gravity_change_2():
     global gravity_job, gravity, gravity_change_time
