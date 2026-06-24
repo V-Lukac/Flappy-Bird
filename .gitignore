@@ -1,6 +1,5 @@
 # Build folders
 build/
-dist/
 
 # PyInstaller spec files
 *.spec
